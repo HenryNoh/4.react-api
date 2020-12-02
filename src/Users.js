@@ -1,29 +1,23 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useAsync } from 'react-async';
+import { useUsersState, useUsersDispatch, getUsers } from './UsersContext';
 import User from './User';
-
-async function getUsers() {
-  const response = await axios.get(
-    'https://jsonplaceholder.typicode.com/users'
-  );
-  return response.data;
-}
 
 function Users() {
   const [userId, setUserId] = useState(null);
-  // 이전에 쓴 skip을 사용하는 방법
-  // const { data: users, error, isLoading, run } = useAsync({
-  //   deferFn: getUsers,
-  // });
-  const { data: users, error, isLoading, reload } = useAsync({
-    promiseFn: getUsers,
-  });
+  const state = useUsersState();
+  const dispatch = useUsersDispatch();
 
-  if (isLoading) return <div>로딩중..</div>;
+  const { data: users, loading, error } = state.users;
+  // useEffect쓰고 deps 빈배열로 해도 똑같은지 확인
+  // 실행은 잘 됨 같은지 아닌지는 모르겠음
+  const fetchData = () => {
+    getUsers(dispatch);
+  };
+
+  if (loading) return <div>로딩중..</div>;
   if (error) return <div>에러가 발생했습니다</div>;
-  // if (!users) return <button onClick={run}>불러오기</button>;
-  if (!users) return <button onClick={reload}>불러오기</button>;
+  if (!users) return <button onClick={fetchData}>불러오기</button>;
+
   return (
     <>
       <ul>
@@ -38,7 +32,7 @@ function Users() {
         ))}
       </ul>
       {/* <button onClick={run}>다시 불러오기</button> */}
-      <button onClick={reload}>다시 불러오기</button>
+      <button onClick={fetchData}>다시 불러오기</button>
       {userId && <User id={userId} />}
     </>
   );
